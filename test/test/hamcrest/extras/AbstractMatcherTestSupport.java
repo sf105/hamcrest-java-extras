@@ -5,6 +5,7 @@ package test.hamcrest.extras;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 
@@ -13,7 +14,18 @@ public abstract class AbstractMatcherTestSupport  {
 
     // Create an instance of the Matcher so some generic safety-net tests can be run on it.
     protected abstract Matcher<?> createMatcher();
-    
+
+    @Test public void
+    isNullSafe() {
+        createMatcher().matches(null);
+    }
+
+    @Test public void
+    copesWithUnknownTypes() {
+        createMatcher().matches(new UnknownType());
+    }
+
+
     public static <T> void assertMatches(String message, Matcher<? super T> c, T arg) {
         assertTrue(message, c.matches(arg));
     }
@@ -33,16 +45,6 @@ public abstract class AbstractMatcherTestSupport  {
         assertFalse("Precondition: Matcher should not match item.", matcher.matches(arg));
         matcher.describeMismatch(arg, description);
         assertEquals("Expected mismatch description", expected, description.toString());
-    }
-
-    public void testIsNullSafe() {
-       // should not throw a NullPointerException
-       createMatcher().matches(null);
-    }
-
-    public void testCopesWithUnknownTypes() {
-        // should not throw ClassCastException
-        createMatcher().matches(new UnknownType());
     }
 
     public static class UnknownType {
