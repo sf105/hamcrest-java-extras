@@ -1,5 +1,6 @@
 package org.hamcrest.extras;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -24,24 +25,28 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
     @Override
     protected boolean matchesSafely(String source, Description mismatch) {
         try {
-            JsonObject jsonObject = new JsonParser().parse(source).getAsJsonObject();
-            boolean pathFound = jsonObject.has(jsonPath);
-            if (!pathFound) {
+            JsonObject root = new JsonParser().parse(source).getAsJsonObject();
+            final JsonElement element = root.get(jsonPath);
+            if (element == null) {
                 mismatch.appendText("no path matching '").appendText(jsonPath).appendText("'");
                 return false;
             }
 
-            final String item = jsonObject.get(jsonPath).getAsString();
-            if (!contentsMatcher.matches(item)) {
-                mismatch.appendText("element at ").appendText(jsonPath).appendText(" ");
-                contentsMatcher.describeMismatch(item, mismatch);
-                return false;
-            }
-            return true;
+            return matchesContentsOf(mismatch, element);
         } catch (JsonSyntaxException e) {
             mismatch.appendText(e.getMessage());
         }
         return false;
+    }
+
+    private boolean matchesContentsOf(Description mismatch, JsonElement element) {
+        final String item = element.getAsString();
+        if (!contentsMatcher.matches(item)) {
+            mismatch.appendText("element at ").appendText(jsonPath).appendText(" ");
+            contentsMatcher.describeMismatch(item, mismatch);
+            return false;
+        }
+        return true;
     }
 
     public void describeTo(Description description) {
