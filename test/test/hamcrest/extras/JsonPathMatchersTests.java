@@ -17,24 +17,30 @@ public class JsonPathMatchersTests {
     @Test public void
     matches_one_level() {
         assertMatches("top level field", hasJsonPath("onelevel"), JSON_SRC);
-        assertMismatchDescription("no path matching 'notonelevel'", hasJsonPath("notonelevel"), JSON_SRC);
+        assertMismatchDescription("missing element 'notonelevel'", hasJsonPath("notonelevel"), JSON_SRC);
     }
 
     @Test public void
     matches_contents_of_one_level() {
         assertMatches("top level field", hasJsonElement("onelevel", equalTo("a top level")), JSON_SRC);
         assertMismatchDescription(
-                "element at onelevel was \"a top level\"",
+                "content was \"a top level\"",
                 hasJsonElement("onelevel", equalTo("bad")),
                 JSON_SRC);
     }
 
-    public void
+    @Test public void
     matches_two_level_object() {
         assertMismatchDescription(
-                "no 'missing' in 'anobject'",
+                "missing element 'missing'",
                 hasJsonElement("anobject.missing", equalTo("inobjectvalue")),
                 JSON_SRC);
+
+        assertMismatchDescription(
+                "content was \"inobjectvalue\"",
+                hasJsonElement("anobject.inobject", equalTo("wrong")),
+                JSON_SRC);
+
     }
     
     @Test public void

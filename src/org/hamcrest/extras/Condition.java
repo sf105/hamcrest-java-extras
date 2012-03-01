@@ -1,6 +1,7 @@
 package org.hamcrest.extras;
 
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 
 /**
  * Based on https://github.com/npryce/maybe-java
@@ -14,16 +15,12 @@ public abstract class Condition<T> {
         Condition<O> apply(I value, Description mismatch);
     }
 
-    public interface Match<I> {
-        boolean apply(I value, Description mismatch);
-    }
-
-    public abstract boolean matches(Match<T> match);
+    public abstract boolean matches(Matcher<T> match);
     public abstract <U> Condition<U> and(Step<? super T, U> mapping);
 
     public static <T> Condition<T> notMatched() {
         return new Condition<T>() {
-            @Override public boolean matches(Match<T> match) { return false; }
+            @Override public boolean matches(Matcher<T> match) { return false; }
 
             @Override public <U> Condition<U> and(Step<? super T, U> mapping) {
                 return notMatched();
@@ -34,8 +31,12 @@ public abstract class Condition<T> {
     public static <T> Condition<T> matched(final T theValue, final Description mismatch) {
         return new Condition<T>() {
             @Override
-            public boolean matches(Match<T> match) {
-                return match.apply(theValue, mismatch);
+            public boolean matches(Matcher<T> matcher) {
+                if (!matcher.matches(theValue)) {
+                    matcher.describeMismatch(theValue, mismatch);
+                    return false;
+                }
+                return true;
             }
 
             @Override
@@ -44,5 +45,4 @@ public abstract class Condition<T> {
             }
         };
     }
-
 }
