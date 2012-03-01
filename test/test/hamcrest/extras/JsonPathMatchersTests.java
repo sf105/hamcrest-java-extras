@@ -10,17 +10,18 @@ import static test.hamcrest.extras.AbstractMatcherTestSupport.assertMismatchDesc
 
 public class JsonPathMatchersTests {
     public final static String JSON_SRC =
-            "{ 'onelevel': 'a top level' }";
+            "{ 'onelevel': 'a top level'," +
+              " 'anobject': { 'inobject': 'inobjectvalue' } }";
 
 
     @Test public void
-    matches_one_level_path() {
+    matches_one_level() {
         assertMatches("top level field", hasJsonPath("onelevel"), JSON_SRC);
         assertMismatchDescription("no path matching 'notonelevel'", hasJsonPath("notonelevel"), JSON_SRC);
     }
 
     @Test public void
-    matches_contents_of_one_level_path() {
+    matches_contents_of_one_level() {
         assertMatches("top level field", hasJsonElement("onelevel", equalTo("a top level")), JSON_SRC);
         assertMismatchDescription(
                 "element at onelevel was \"a top level\"",
@@ -28,6 +29,14 @@ public class JsonPathMatchersTests {
                 JSON_SRC);
     }
 
+    public void
+    matches_two_level_object() {
+        assertMismatchDescription(
+                "no 'missing' in 'anobject'",
+                hasJsonElement("anobject.missing", equalTo("inobjectvalue")),
+                JSON_SRC);
+    }
+    
     @Test public void
     rejects_invalid_json() {
         assertMismatchDescription(
