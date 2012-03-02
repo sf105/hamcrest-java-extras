@@ -6,6 +6,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import org.hamcrest.*;
 
+import java.util.ArrayList;
+
 import static org.hamcrest.extras.Condition.matched;
 import static org.hamcrest.extras.Condition.notMatched;
 
@@ -72,35 +74,37 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
 
         public Condition<JsonElement> apply(JsonElement root, Description mismatch) {
             Condition<JsonElement> current = matched(root, mismatch);
-            for (String segment : jsonPath.split("\\.")) {
-                current = current
-                            .and(asObject(segment))
-                            .and(nextSegment(segment));
+            for (Segment segment : split(jsonPath)) {
+                current = current.and(segment);
             }
             return current;
         }
-        
-        private Condition.Step<JsonElement, JsonObject> asObject(final String segment) {
-            return new Condition.Step<JsonElement, JsonObject>() {
-                public Condition<JsonObject> apply(JsonElement element, Description mismatch) {
-                    if (element.isJsonObject()) {
-                        return matched(element.getAsJsonObject(), mismatch);
-                    }
-                    mismatch.appendText("no object at '").appendText(segment).appendText("'");
-                    return notMatched();
-                }
-            };
+    }
+    
+    private static Iterable<Segment> split(String jsonPath) {
+        final ArrayList<Segment> segments = new ArrayList<Segment>();
+        for (String pathSegment : jsonPath.split("\\.")) {
+            segments.add(new Segment(pathSegment));
         }
-        private Condition.Step<JsonObject, JsonElement> nextSegment(final String segment) {
-            return new Condition.Step<JsonObject, JsonElement>() {
-                public Condition<JsonElement> apply(JsonObject object, Description mismatch) {
-                    if (object.has(segment)) {
-                        return matched(object.get(segment), mismatch);
-                    }
-                    mismatch.appendText("missing element '").appendText(segment).appendText("'");
-                    return notMatched();
-                }
-            };
+        return segments;
+    }
+
+    private static class Segment implements Condition.Step<JsonElement, JsonElement> {
+        private final String pathSegment;
+        public Segment(String pathSegment) {
+            this.pathSegment = pathSegment;
+        }
+        public Condition apply(JsonElement current, Description mismatch) {
+            if (!current.isJsonObject()) {
+                mismatch.appendText("no object at '").appendText(pathSegment).appendText("'");
+                return notMatched();
+            }
+            JsonObject object = current.getAsJsonObject();
+            if (!object.has(pathSegment)) {
+                mismatch.appendText("missing element '").appendText(pathSegment).appendText("'");
+                return notMatched();
+            }
+            return matched(object.get(pathSegment), mismatch);
         }
     }
 }
