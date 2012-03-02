@@ -13,7 +13,7 @@ public class JsonPathMatchersTests {
     public final static String JSON_SRC =
             "{ 'onelevel': 'a top level'," +
               " 'anobject': { 'inobject': 'inobjectvalue' }," +
-              " 'anarray': [ 'zero', 'one'] }";
+              " 'anarray': [ 'zero', 'one', { 'two': 'deep' }] }";
 
 
     @Test public void
@@ -49,8 +49,8 @@ public class JsonPathMatchersTests {
     matches_array_element() {
         assertMatches("array value", hasJsonElement("anarray[1]", equalTo("one")), JSON_SRC);
         assertMismatchDescription(
-                "index 3 too large in anarray[3]",
-                hasJsonElement("anarray[3]", any(String.class)), JSON_SRC);
+                "index 10 too large in anarray[10]",
+                hasJsonElement("anarray[10]", any(String.class)), JSON_SRC);
         assertMismatchDescription(
                 "index not a number in anarray[xx]",
                 hasJsonElement("anarray[xx]", any(String.class)), JSON_SRC);
@@ -59,7 +59,20 @@ public class JsonPathMatchersTests {
                 hasJsonElement("anarray[1]", equalTo("wrong")),
                 JSON_SRC);
     }
-    
+
+    @Test public void
+    matches_an_element_in_an_object_in_an_array() {
+        assertMatches("array value", hasJsonElement("anarray[2].two", equalTo("deep")), JSON_SRC);
+        assertMismatchDescription(
+                "missing element at 'anarray[2].wrong'",
+                hasJsonElement("anarray[2].wrong", any(String.class)),
+                JSON_SRC);
+        assertMismatchDescription(
+                "content was \"deep\"",
+                hasJsonElement("anarray[2].two", equalTo("wrong")),
+                JSON_SRC);
+    }
+
     @Test public void
     rejects_invalid_json() {
         assertMismatchDescription(
