@@ -27,7 +27,11 @@ public abstract class AbstractMatcherTestSupport  {
 
 
     public static <T> void assertMatches(String message, Matcher<? super T> c, T arg) {
-        assertTrue(message, c.matches(arg));
+        if (!c.matches(arg)) {
+            final Description description = new StringDescription();
+            c.describeMismatch(arg, description);
+            fail(message + ": " + description.toString());
+        }
     }
 
     public static <T> void assertDoesNotMatch(String message, Matcher<? super T> c, T arg) {
