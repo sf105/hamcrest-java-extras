@@ -24,7 +24,7 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
 
     public JsonPathMatcher(String jsonPath, Matcher<JsonElement> elementContents) {
         this.jsonPath = jsonPath;
-        this.findElement = new FindElement(jsonPath);
+        this.findElement = findElementStep(jsonPath);
         this.elementContents = elementContents;
     }
 
@@ -66,22 +66,19 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
         };
     }
 
-    private static class FindElement implements Condition.Step<JsonElement, JsonElement> {
-        private final String jsonPath;
-
-        public FindElement(String jsonPath) {
-            this.jsonPath = jsonPath;
-        }
-
-        public Condition<JsonElement> apply(JsonElement root, Description mismatch) {
-            Condition<JsonElement> current = matched(root, mismatch);
-            for (Segment segment : split(jsonPath)) {
-                current = current.and(segment);
+    private static Condition.Step<JsonElement, JsonElement> findElementStep(final String jsonPath) {
+        return new Condition.Step<JsonElement, JsonElement>() {
+            public Condition<JsonElement> apply(JsonElement root, Description mismatch) {
+                Condition<JsonElement> current = matched(root, mismatch);
+                for (Segment nextSegment : split(jsonPath)) {
+                    current = current.then(nextSegment);
+                }
+                return current;
             }
-            return current;
-        }
+        };
     }
-    
+
+
     private static Iterable<Segment> split(String jsonPath) {
         final ArrayList<Segment> segments = new ArrayList<Segment>();
         final StringBuilder pathSoFar = new StringBuilder();

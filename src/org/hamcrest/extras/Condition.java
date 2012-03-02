@@ -17,6 +17,7 @@ public abstract class Condition<T> {
 
     public abstract boolean matches(Matcher<T> match);
     public abstract <U> Condition<U> and(Step<? super T, U> mapping);
+    public final <U> Condition<U> then(Step<? super T, U> mapping) { return and(mapping); }
 
     public static <T> Condition<T> notMatched() {
         return new Condition<T>() {
@@ -32,11 +33,11 @@ public abstract class Condition<T> {
         return new Condition<T>() {
             @Override
             public boolean matches(Matcher<T> matcher) {
-                if (!matcher.matches(theValue)) {
-                    matcher.describeMismatch(theValue, mismatch);
-                    return false;
+                if (matcher.matches(theValue)) {
+                    return true;
                 }
-                return true;
+                matcher.describeMismatch(theValue, mismatch);
+                return false;
             }
 
             @Override
