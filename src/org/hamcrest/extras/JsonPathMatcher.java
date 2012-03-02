@@ -8,6 +8,7 @@ import org.hamcrest.*;
 
 import java.util.ArrayList;
 
+import static org.hamcrest.Matchers.any;
 import static org.hamcrest.extras.Condition.matched;
 import static org.hamcrest.extras.Condition.notMatched;
 
@@ -38,7 +39,7 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
     }
 
     public static Matcher<String> hasJsonPath(final String jsonPath) {
-        return new JsonPathMatcher(jsonPath, Matchers.any(JsonElement.class));
+        return new JsonPathMatcher(jsonPath, any(JsonElement.class));
     }
 
     @SuppressWarnings("unchecked")
@@ -59,9 +60,7 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
     private static Matcher<JsonElement> elementWith(Matcher<String> contentsMatcher, String jsonPath) {
         return new FeatureMatcher<JsonElement, String>(contentsMatcher, "element at " + jsonPath, "content") {
             @Override
-            protected String featureValueOf(JsonElement actual) {
-                return actual.getAsString();
-            }
+            protected String featureValueOf(JsonElement actual) { return actual.getAsString(); }
         };
     }
 
@@ -94,12 +93,16 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
         public Segment(String pathSegment) {
             this.pathSegment = pathSegment;
         }
-        public Condition apply(JsonElement current, Description mismatch) {
-            if (!current.isJsonObject()) {
-                mismatch.appendText("no object at '").appendText(pathSegment).appendText("'");
-                return notMatched();
-            }
-            JsonObject object = current.getAsJsonObject();
+        public Condition<JsonElement> apply(JsonElement current, Description mismatch) {
+            if (current.isJsonObject()) {
+                return nextObject(current, mismatch);
+            }                                
+            mismatch.appendText("no object at '").appendText(pathSegment).appendText("'");
+            return notMatched();
+        }
+
+        private Condition<JsonElement> nextObject(JsonElement current, Description mismatch) {
+            final JsonObject object = current.getAsJsonObject();
             if (!object.has(pathSegment)) {
                 mismatch.appendText("missing element '").appendText(pathSegment).appendText("'");
                 return notMatched();
