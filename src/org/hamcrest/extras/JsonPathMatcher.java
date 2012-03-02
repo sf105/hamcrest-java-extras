@@ -95,6 +95,7 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
                 segments.add(new Segment(pathSegment.substring(
                         leftBracket + 1, pathSegment.length() - 1), pathSoFar.toString()));
             }
+            pathSoFar.append(".");
         }
         return segments;
     }
@@ -114,14 +115,14 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
             if (current.isJsonArray()) {
                 return nextArrayElement(current, mismatch);
             }
-            mismatch.appendText("no object at '").appendText(pathSegment).appendText("'");
+            mismatch.appendText("no object at '").appendText(pathSoFar).appendText("'");
             return notMatched();
         }
 
         private Condition<JsonElement> nextObject(JsonElement current, Description mismatch) {
             final JsonObject object = current.getAsJsonObject();
             if (!object.has(pathSegment)) {
-                mismatch.appendText("missing element '").appendText(pathSegment).appendText("'");
+                mismatch.appendText("missing element at '").appendText(pathSoFar).appendText("'");
                 return notMatched();
             }
             return matched(object.get(pathSegment), mismatch);

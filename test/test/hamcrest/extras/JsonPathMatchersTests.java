@@ -19,7 +19,7 @@ public class JsonPathMatchersTests {
     @Test public void
     matches_one_level() {
         assertMatches("top level field", hasJsonPath("onelevel"), JSON_SRC);
-        assertMismatchDescription("missing element 'notonelevel'", hasJsonPath("notonelevel"), JSON_SRC);
+        assertMismatchDescription("missing element at 'notonelevel'", hasJsonPath("notonelevel"), JSON_SRC);
     }
 
     @Test public void
@@ -34,7 +34,7 @@ public class JsonPathMatchersTests {
     @Test public void
     matches_two_level_object() {
         assertMismatchDescription(
-                "missing element 'missing'",
+                "missing element at 'anobject.missing'",
                 hasJsonElement("anobject.missing", any(String.class)),
                 JSON_SRC);
 
@@ -43,7 +43,6 @@ public class JsonPathMatchersTests {
                 hasJsonElement("anobject.inobject", equalTo("wrong")),
                 JSON_SRC);
         assertMatches("second level field", hasJsonElement("anobject.inobject", equalTo("inobjectvalue")), JSON_SRC);
-
     }
 
     @Test public void
