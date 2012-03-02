@@ -51,7 +51,13 @@ public class JsonPathMatchersTests {
         assertMismatchDescription(
                 "index 3 too large in anarray[3]",
                 hasJsonElement("anarray[3]", any(String.class)), JSON_SRC);
-
+        assertMismatchDescription(
+                "index not a number in anarray[xx]",
+                hasJsonElement("anarray[xx]", any(String.class)), JSON_SRC);
+        assertMismatchDescription(
+                "content was \"one\"",
+                hasJsonElement("anarray[1]", equalTo("wrong")),
+                JSON_SRC);
     }
     
     @Test public void

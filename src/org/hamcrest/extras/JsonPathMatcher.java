@@ -130,6 +130,15 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
 
         private Condition<JsonElement> nextArrayElement(JsonElement current, Description mismatch) {
             final JsonArray array = current.getAsJsonArray();
+            try {
+                return arrayElementIn(array, mismatch);
+            } catch (NumberFormatException e) {
+                mismatch.appendText("index not a number in ").appendText(pathSoFar);
+                return notMatched();
+            }
+        }
+
+        private Condition<JsonElement> arrayElementIn(JsonArray array, Description mismatch) {
             final int index = parseInt(pathSegment);
             if (index > array.size()) {
                 mismatch.appendText(format("index %d too large in ", index))

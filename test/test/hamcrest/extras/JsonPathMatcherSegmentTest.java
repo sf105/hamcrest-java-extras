@@ -52,6 +52,13 @@ public class JsonPathMatcherSegmentTest {
         assertFalse("out of bounds", next(parent, "2").matches(any(JsonElement.class)));
     }
 
+    @Test public void
+    returns_not_matched_for_array_index_notANumber() {
+        final JsonArray parent = new JsonArray();
+
+        assertFalse("not a number", next(parent, "xx").matches(any(JsonElement.class)));
+    }
+
     private Condition<JsonElement> next(JsonElement parent, String pathSegment) {
         return new JsonPathMatcher.Segment(pathSegment, "path so far").apply(parent, description);
     }
