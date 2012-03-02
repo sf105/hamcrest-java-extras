@@ -1,13 +1,15 @@
 package org.hamcrest.extras;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
-import org.hamcrest.*;
+import com.google.gson.*;
+import org.hamcrest.Description;
+import org.hamcrest.FeatureMatcher;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 import java.util.ArrayList;
 
+import static java.lang.Integer.parseInt;
+import static java.lang.String.format;
 import static org.hamcrest.Matchers.any;
 import static org.hamcrest.extras.Condition.matched;
 import static org.hamcrest.extras.Condition.notMatched;
@@ -82,21 +84,36 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
     
     private static Iterable<Segment> split(String jsonPath) {
         final ArrayList<Segment> segments = new ArrayList<Segment>();
+        final StringBuilder pathSoFar = new StringBuilder();
         for (String pathSegment : jsonPath.split("\\.")) {
-            segments.add(new Segment(pathSegment));
+            pathSoFar.append(pathSegment);
+            final int leftBracket = pathSegment.indexOf('[');
+            if (leftBracket == -1) {
+                segments.add(new Segment(pathSegment, pathSoFar.toString()));
+            } else {
+                segments.add(new Segment(pathSegment.substring(0, leftBracket), pathSoFar.toString()));
+                segments.add(new Segment(pathSegment.substring(
+                        leftBracket + 1, pathSegment.length() - 1), pathSoFar.toString()));
+            }
         }
         return segments;
     }
 
-    private static class Segment implements Condition.Step<JsonElement, JsonElement> {
+    public static class Segment implements Condition.Step<JsonElement, JsonElement> {
         private final String pathSegment;
-        public Segment(String pathSegment) {
+        private final String pathSoFar;
+
+        public Segment(String pathSegment, String pathSoFar) {
             this.pathSegment = pathSegment;
+            this.pathSoFar = pathSoFar;
         }
         public Condition<JsonElement> apply(JsonElement current, Description mismatch) {
             if (current.isJsonObject()) {
                 return nextObject(current, mismatch);
-            }                                
+            }
+            if (current.isJsonArray()) {
+                return nextArrayElement(current, mismatch);
+            }
             mismatch.appendText("no object at '").appendText(pathSegment).appendText("'");
             return notMatched();
         }
@@ -108,6 +125,17 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
                 return notMatched();
             }
             return matched(object.get(pathSegment), mismatch);
+        }
+
+        private Condition<JsonElement> nextArrayElement(JsonElement current, Description mismatch) {
+            final JsonArray array = current.getAsJsonArray();
+            final int index = parseInt(pathSegment);
+            if (index > array.size()) {
+                mismatch.appendText(format("index %d too large in ", index))
+                        .appendText(pathSoFar);
+                return notMatched();
+            }
+            return matched(array.get(index), mismatch);
         }
     }
 }
