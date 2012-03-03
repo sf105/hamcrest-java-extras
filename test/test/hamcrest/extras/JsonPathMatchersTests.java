@@ -91,4 +91,12 @@ public class JsonPathMatchersTests {
                 "not really json");
     }
 
+    @Test public void
+    rejects_empty_json() {
+        assertMismatchDescription(
+                "missing element at 'something'",
+                hasJsonPath("something"),
+                "{}");
+    }
+
 }

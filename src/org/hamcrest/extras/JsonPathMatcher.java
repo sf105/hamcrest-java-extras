@@ -46,7 +46,7 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
 
     @Factory
     public static Matcher<String> hasJsonElement(final String jsonPath, final Matcher<String> contentsMatcher) {
-        return new JsonPathMatcher(jsonPath, elementWith(contentsMatcher, jsonPath));
+        return new JsonPathMatcher(jsonPath, elementWith(contentsMatcher));
     }
 
 
@@ -59,11 +59,15 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
         return notMatched();
     }
 
-    private static Matcher<JsonElement> elementWith(final Matcher<String> contentsMatcher, final String jsonPath) {
+    private static Matcher<JsonElement> elementWith(final Matcher<String> contentsMatcher) {
         return new TypeSafeDiagnosingMatcher<JsonElement>() {
             @Override
             protected boolean matchesSafely(JsonElement element, Description mismatch) {
                 return jsonPrimitive(element, mismatch).matching(contentsMatcher);
+            }
+
+            public void describeTo(Description description) {
+                description.appendText("containing ").appendDescriptionOf(contentsMatcher);
             }
 
             private Condition<String> jsonPrimitive(JsonElement element, Description mismatch) {
@@ -72,10 +76,6 @@ public class JsonPathMatcher extends TypeSafeDiagnosingMatcher<String> {
                 }
                 mismatch.appendText("element was ").appendValue(element);
                 return notMatched();
-            }
-
-            public void describeTo(Description description) {
-                description.appendText("element at ").appendText(jsonPath).appendDescriptionOf(contentsMatcher);
             }
         };
     }
