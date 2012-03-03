@@ -13,7 +13,8 @@ public class JsonPathMatchersTests {
     public final static String JSON_SRC =
             "{ 'onelevel': 'a top level'," +
               " 'anobject': { 'inobject': 'inobjectvalue' }," +
-              " 'anarray': [ 'zero', 'one', { 'two': 'deep' }] }";
+              " 'anarray': [ 'zero', 'one', { 'two': 'deep' }]," +
+              " 'withnull' : null }";
 
 
     @Test public void
@@ -26,9 +27,18 @@ public class JsonPathMatchersTests {
     matches_contents_of_one_level() {
         assertMatches("top level field", hasJsonElement("onelevel", equalTo("a top level")), JSON_SRC);
         assertMismatchDescription(
-                "content was \"a top level\"",
+                "was \"a top level\"",
                 hasJsonElement("onelevel", equalTo("bad")),
                 JSON_SRC);
+        assertMismatchDescription(
+                "element was <{\"inobject\":\"inobjectvalue\"}>",
+                hasJsonElement("anobject", any(String.class)),
+                JSON_SRC);
+        assertMismatchDescription(
+                "element was <null>",
+                hasJsonElement("withnull", any(String.class)),
+                JSON_SRC);
+
     }
 
     @Test public void
@@ -39,7 +49,7 @@ public class JsonPathMatchersTests {
                 JSON_SRC);
 
         assertMismatchDescription(
-                "content was \"inobjectvalue\"",
+                "was \"inobjectvalue\"",
                 hasJsonElement("anobject.inobject", equalTo("wrong")),
                 JSON_SRC);
         assertMatches("second level field", hasJsonElement("anobject.inobject", equalTo("inobjectvalue")), JSON_SRC);
@@ -55,7 +65,7 @@ public class JsonPathMatchersTests {
                 "index not a number in anarray[xx]",
                 hasJsonElement("anarray[xx]", any(String.class)), JSON_SRC);
         assertMismatchDescription(
-                "content was \"one\"",
+                "was \"one\"",
                 hasJsonElement("anarray[1]", equalTo("wrong")),
                 JSON_SRC);
     }
@@ -68,7 +78,7 @@ public class JsonPathMatchersTests {
                 hasJsonElement("anarray[2].wrong", any(String.class)),
                 JSON_SRC);
         assertMismatchDescription(
-                "content was \"deep\"",
+                "was \"deep\"",
                 hasJsonElement("anarray[2].two", equalTo("wrong")),
                 JSON_SRC);
     }

@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.hamcrest.StringDescription;
 import org.hamcrest.extras.Condition;
-import org.hamcrest.extras.JsonPathMatcher;
+import org.hamcrest.extras.JsonPathSegment;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.any;
@@ -17,7 +17,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Freeman 2012 http://www.hamcrest.com
  */
-public class JsonPathMatcherSegmentTest {
+public class JsonPathSegmentTest {
     final StringDescription description = new StringDescription();
     private final JsonElement child = new JsonPrimitive("a child");
 
@@ -26,14 +26,14 @@ public class JsonPathMatcherSegmentTest {
         final JsonObject parent = new JsonObject();
         parent.add("child", child);
 
-        assertTrue("child", next(parent, "child").matches(sameInstance(child)));
+        assertTrue("child", next(parent, "child").matching(sameInstance(child)));
     }
 
     @Test public void
     returns_not_matched_for_wrong_property() {
         final JsonObject parent = new JsonObject();
 
-        assertFalse("not child", next(parent, "child").matches(any(JsonElement.class)));
+        assertFalse("not child", next(parent, "child").matching(any(JsonElement.class)));
     }
 
     @Test public void
@@ -41,7 +41,7 @@ public class JsonPathMatcherSegmentTest {
         final JsonArray parent = new JsonArray();
         parent.add(child);
 
-        assertTrue("first element", next(parent, "0").matches(sameInstance(child)));
+        assertTrue("first element", next(parent, "0").matching(sameInstance(child)));
     }
 
     @Test public void
@@ -49,17 +49,17 @@ public class JsonPathMatcherSegmentTest {
         final JsonArray parent = new JsonArray();
         parent.add(child);
 
-        assertFalse("out of bounds", next(parent, "2").matches(any(JsonElement.class)));
+        assertFalse("out of bounds", next(parent, "2").matching(any(JsonElement.class)));
     }
 
     @Test public void
     returns_not_matched_for_array_index_notANumber() {
         final JsonArray parent = new JsonArray();
 
-        assertFalse("not a number", next(parent, "xx").matches(any(JsonElement.class)));
+        assertFalse("not a number", next(parent, "xx").matching(any(JsonElement.class)));
     }
 
     private Condition<JsonElement> next(JsonElement parent, String pathSegment) {
-        return new JsonPathMatcher.Segment(pathSegment, "path so far").apply(parent, description);
+        return new JsonPathSegment(pathSegment, "path so far").apply(parent, description);
     }
 }
